@@ -8,6 +8,9 @@ etc/
 data/
 output*
 std*
+*.png
+vaidya*
+schwarzschild*
 
 # Ignore log files
 *.log

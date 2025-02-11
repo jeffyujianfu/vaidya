@@ -7,6 +7,8 @@ r_prime_0 = -1/np.sqrt(2)
 
 # define the mass function
 def mass_func(v, slope, m0, mf):
+  if slope == 0:
+    return m0, 0
   vf = (mf - m0)/slope
   if v > 0 and v < vf:
     m_prime = slope

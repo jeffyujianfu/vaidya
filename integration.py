@@ -75,8 +75,8 @@ def plot_until_xstop(geodesic, initials, desired_xval, slope, m0, mf):
                               [0,1000],
                               initials,
                               args=(slope, m0, mf),
-                              rtol=1e-10,
-                              atol=1e-10,
+                              rtol=1e-8,
+                              atol=1e-8,
                               events=event_x_reached)
   rpoints = sol.y[1]
   thetapoints = sol.y[2]
@@ -111,7 +111,7 @@ def plot_until_xstop(geodesic, initials, desired_xval, slope, m0, mf):
 # step 4: find the initial conditions for the shooting problem
 # define a function that can get us to the preimage of a point using step algorithm
 def get_preimage (geodesic, new_point, current_point, current_initial_condition,
-                  v0, r0, m_prime, m0, mf, error = 0.03):
+                  v0, r0, m_prime, m0, mf, error = 0.01):
   guess_point = current_point
   new_initial_conditions = current_initial_condition
   theta_prime_0 = current_initial_condition[6]
@@ -121,24 +121,20 @@ def get_preimage (geodesic, new_point, current_point, current_initial_condition,
 
   while np.abs(new_point[1] - guess_point[1]) + np.abs(new_point[2] - guess_point[2]) > 2*error:
     # adjusting values for delta phi prime
-    if np.abs(new_point[1] - guess_point[1]) > 20:
-      delta_phi_prime = 10**(-2)
-    elif np.abs(new_point[1] - guess_point[1]) > 5:
-      delta_phi_prime = 10**(-3)
-    elif np.abs(new_point[1] - guess_point[1]) > 1:
+    if np.abs(new_point[1] - guess_point[1]) > 1:
       delta_phi_prime = 10**(-4)
-    else:
+    elif np.abs(new_point[1] - guess_point[1]) > 0.1:
       delta_phi_prime = 10**(-5)
+    else:
+      delta_phi_prime = 10**(-6)
 
     # adjusting values for delta theta prime
-    if np.abs(new_point[2] - guess_point[2]) > 20:
-      delta_phi_prime = 10**(-2)
-    elif np.abs(new_point[2] - guess_point[2]) > 5:
-      delta_phi_prime = 10**(-3)
-    elif np.abs(new_point[2] - guess_point[2]) > 1:
-      delta_phi_prime = 10**(-4)
+    if np.abs(new_point[2] - guess_point[2]) > 1:
+      delta_theta_prime = 10**(-4)
+    elif np.abs(new_point[2] - guess_point[2]) > 0.1:
+      delta_theta_prime = 10**(-5)
     else:
-      delta_phi_prime = 10**(-5)
+      delta_theta_prime = 10**(-6)
 
     # update theta_prime_0 and phi_prime_0 accordingly
     if new_point[1] > guess_point[1]:
@@ -174,9 +170,11 @@ def get_preimage_set (geodesic, set_of_points, current_point, current_initial_co
   return set_of_preimages
 
 
-# interpolate between the first and second point along the trajectory
-# where we want the xval to stop at 10**(-12) away from x0.
-def get_observer_view(set_of_trajectories):
+# Interpolate between the first and second point along the trajectory
+# Where we want the xval to stop at 10**(-9) away from x0.
+# Then we project the vertical view onto the slanted plane
+def get_observer_view(set_of_trajectories, theta):
+  d = 10**(-9) # distance from x0 to stop at
   xstuff = []
   ystuff  =  []
   zstuff = []
@@ -186,7 +184,7 @@ def get_observer_view(set_of_trajectories):
     #--------------
     x1 = trajectory[0][1]
     x0 = trajectory[0][0]
-    t = - 10**(-12) / (x1 - x0)
+    t = - d/ (x1 - x0)
     xstuff.append((1-t) * x0 + t * x1)
     y1 = trajectory[1][1]
     y0 = trajectory[1][0]
@@ -194,4 +192,12 @@ def get_observer_view(set_of_trajectories):
     z0 = trajectory[2][0]
     ystuff.append((1-t) * y0 + t * y1)
     zstuff.append((1-t) * z0 + t * z1)
+  
+  # change them into arrays
+  ystuff = np.array(ystuff)
+  zstuff = np.array(zstuff)
+  
+  # project onto slanted plane
+  z_max = max(zstuff)
+  zstuff = z_max/np.cos(theta) - np.sqrt(z_max**2 + d**2) * d * (z_max - zstuff) / (d**2 + z_max * zstuff)
   return (ystuff, zstuff)

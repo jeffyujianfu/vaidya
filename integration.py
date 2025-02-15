@@ -199,5 +199,6 @@ def get_observer_view(set_of_trajectories, theta):
   
   # project onto slanted plane
   z_max = max(zstuff)
+  ystuff = ystuff * (1 + (z_max - zstuff) * z_max / d**2)
   zstuff = z_max/np.cos(theta) - np.sqrt(z_max**2 + d**2) * d * (z_max - zstuff) / (d**2 + z_max * zstuff)
   return (ystuff, zstuff)

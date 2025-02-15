@@ -16,22 +16,26 @@ r_prime_0 = -1/np.sqrt(2)
 
 def main(radius, points, x, theta, v0, m_prime, m0, mf):
     geodesic = vaidya_geodesic
+    # test_angle = impact_parameter_and_lensing_angle(geodesic, 0.5, 0.25, m0, mf)
     set_of_impact_parameters = np.linspace(0.01, 10, 100)
-    set_of_rates = [0.25,0.26,0.27,0.28,0.29,0.3,0.31,0.32,0.33,0.34]
+    set_of_rates = [0.01, 0.04, 0.07, 0.1, 0.13, 0.16, 0.19, 0.193, 0.194, 0.22, 0.25]
     fig1 = plt.figure(figsize=(15, 8))
     ax1 = fig1.add_subplot(111)
     for rate in set_of_rates:
       angles = []
+      set_of_b = []
       for b in set_of_impact_parameters:
         angle = impact_parameter_and_lensing_angle(geodesic, b, rate, m0, mf)
-        angles.append(angle)
-      ax1.plot(set_of_impact_parameters, angles, label = f"rate = {rate}")
+        if angle != 0:
+          angles.append(angle)
+          set_of_b.append(b)
+      ax1.plot(set_of_b, angles, label = f"rate = {rate}")
     ax1.grid(True)
     ax1.set_xlabel('Impact parameter')
-    ax1.set_ylabel('Lensing angle')
+    ax1.set_ylabel('Lensing angle in degrees')
     ax1.set_title('Gravitational lensing of a single particle')
     ax1.legend()
-    fig1.savefig("particle_lensing_no_naked.png", dpi=300, bbox_inches='tight')
+    fig1.savefig("particle_lensing.png", dpi=300, bbox_inches='tight')
     # # get critical theta
     # theta_c = find_critical_theta(geodesic, radius, x, v0, m_prime, m0, mf)
     # # print(f"Critical theta: {theta_c}")

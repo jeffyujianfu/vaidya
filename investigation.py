@@ -16,37 +16,40 @@ def find_intersection(last_two_points, b):
   return x
 
 # This function trace out the trajectory of a particle shooting horizontally to the positive x-axis with
-# an initial velocity v0 and an impact parameter b, it also returnst the lensing angle
-def impact_parameter_and_lensing_angle(geodesic, impact_parameter, m_prime, m0, mf):
+# an initial velocity v0 and an impact parameter b, it also return the lensing angle
+def impact_parameter_and_lensing_angle(geodesic, impact_parameter, m_prime, m0, mf, check):
     '''
     find the lensing angle of a particle for a given impact parameter
     '''
     # set up initial condition
-    initial_conditions_0 = [0, impact_parameter, 0.00001, 0, impact_parameter/np.sqrt(2), 0, 1, 0]
+    initial_conditions_0 = [0, impact_parameter, 0.0000000000001, 0, impact_parameter/np.sqrt(2), 0, 1, 0]
     
     # the expected projection for vaidya geodesic
-    initial_trajectory = plot_until_xstop(geodesic, initial_conditions_0, 500, m_prime, m0, mf)
+    initial_trajectory = plot_until_xstop(geodesic, initial_conditions_0, 100, m_prime, m0, mf, check)
     
-    # # visualize the solution
-    # fig = plt.figure(figsize=(15, 8))
+    if check: 
+      # visualize the solution
+      fig = plt.figure(figsize=(15, 8))
 
-    # # Add a 2D subplot in the second position of a 1x2 grid
-    # ax = fig.add_subplot(111)
-    # ax.plot(initial_trajectory[0], initial_trajectory[2], color = "goldenrod")
-    # # set lables
-    # ax.set_xlabel("x")
-    # ax.set_ylabel("z")
+      # Add a 2D subplot in the second position of a 1x2 grid
+      ax = fig.add_subplot(111)
+      ax.plot(initial_trajectory[0], initial_trajectory[2], color = "goldenrod")
+      # set lables
+      ax.set_xlabel("x")
+      ax.set_ylabel("z")
+      ax.set_xlim(-3,3)
+      ax.set_ylim(-5,3)
 
-    # # Set the aspect ratio to be equal except the 3rd one
-    # ax.set_aspect('equal', adjustable='box')
-    # ax.grid(True)
+      # Set the aspect ratio to be equal except the 3rd one
+      ax.set_aspect('equal', adjustable='box')
+      ax.grid(True)
 
-    # # Set titles
-    # ax.set_title('Trajectory of lensing particle at impact parameter = ' + str(impact_parameter))
-    
-    # # Save fig
-    # fig.savefig(os.path.join("particle_lensing_images", f"Trajectory of lensing particle at impact parameter = {impact_parameter}.png"), dpi=300, bbox_inches='tight')
-    
+      # Set titles
+      ax.set_title('Trajectory of lensing particle at impact parameter = ' + str(impact_parameter))
+      
+      # Save fig
+      fig.savefig(os.path.join("particle_lensing_images", f"Trajectory of lensing particle at impact parameter = {impact_parameter}.png"), dpi=300, bbox_inches='tight')
+      
     # calculate angle
     if np.min(initial_trajectory[0]) < 0:
       return 0

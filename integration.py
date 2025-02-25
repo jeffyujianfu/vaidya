@@ -25,9 +25,9 @@ def vaidya_geodesic(t, z, slope, m0, mf):
   # equation for a' which is v"
   z4 = (-(m)/(r**2))*(a**2)+r*((np.sin(theta))**2)*(d**2) + r*(c**2)
   # equation for b' which is r"
-  z5 = ((m_prime/r)+((m*(-2*m+r))/(r**3)))*(-1)*(a**2) + (-2*m+r)*((np.sin(theta))**2)*(d**2) - 2*(-m/(r**2))*b*a - (2*m-r)*(c**2)
+  z5 = ((m_prime/r)+((m*(r-2*m))/(r**3)))*(-1)*(a**2) + (r-2*m)*(((np.sin(theta))**2)*(d**2)+c**2) + 2*(m/(r**2))*b*a
   # equation for c' which is θ"
-  z6 = (np.sin(theta))*(np.cos(theta))*(d**2)-(2/r)*b*c
+  z6 = (np.sin(theta))*(np.cos(theta))*(d**2) - (2/r)*b*c
   # equation for d' which is φ"
   z7 = -2*((np.cos(theta))/(np.sin(theta)))*d*c - (2/r)*d*b
   return[z0,z1,z2,z3,z4,z5,z6,z7]
@@ -70,14 +70,47 @@ def event_x_reached(t, y, slope, m0, mf, desired_xval = -40):
 event_x_reached.terminal = True  # Stop the integration when the event is reached
 event_x_reached.direction = 0     # Detect zero-crossings in any direction
 
-def plot_until_xstop(geodesic, initials, desired_xval, slope, m0, mf):
+# Define the event function to stop when location of the photon falls into the apparent horizon
+def event_sphere(t, y, slope, m0, mf):
+    v = y[0]   # Assuming v is the first component of the state vector
+    r = y[1]
+    current_mass = mass_func(v, slope, m0, mf)[0]
+    return r - 3 * current_mass
+
+event_sphere.terminal = True  # Stop the integration
+event_sphere.direction = -1    # Trigger when crossing from positive to negative
+
+# Define the event function to stop whenever a numerical failure occurs
+def event_numerical_failure(t, y, slope, m0, mf):
+    # Check for NaN/inf in the state vector `y`
+    if np.isnan(y).any() or np.isinf(y).any():
+        return 0.0  # Trigger event if invalid
+    
+    # Optional: Check for unphysical values (e.g., negative radius)
+    r = y[1]
+    if r <= 0:
+        return 0.0
+    
+    return 1.0  # No issue
+
+event_numerical_failure.terminal = True  # Terminate integration
+event_numerical_failure.direction = -1   # Trigger when crossing from 1 → 0
+
+# solve the geodesic until the photon reaches the desired x value
+def plot_until_xstop(geodesic, initials, desired_xval, slope, m0, mf, check = False):
   sol = sp.integrate.solve_ivp(geodesic,
                               [0,1000],
                               initials,
                               args=(slope, m0, mf),
-                              rtol=1e-8,
-                              atol=1e-8,
-                              events=event_x_reached)
+                              rtol=1e-20,
+                              atol=1e-20,
+                              events=[event_x_reached, event_sphere, event_numerical_failure])
+  # Check which event occurred
+  if check: 
+    if len(sol.t_events[0]) > 0:
+      print("Stopped because x reached desired_xval")
+    elif len(sol.t_events[1]) > 0:
+      print("Stopped because x² + y² < 4m²")
   rpoints = sol.y[1]
   thetapoints = sol.y[2]
   phipoints = sol.y[3]
@@ -199,6 +232,6 @@ def get_observer_view(set_of_trajectories, theta):
   
   # project onto slanted plane
   z_max = max(zstuff)
-  ystuff = ystuff * (1 + (z_max - zstuff) * z_max / d**2)
+  ystuff = ystuff * (z_max**2 + d**2) / (d**2 + z_max * zstuff)
   zstuff = z_max/np.cos(theta) - np.sqrt(z_max**2 + d**2) * d * (z_max - zstuff) / (d**2 + z_max * zstuff)
   return (ystuff, zstuff)

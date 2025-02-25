@@ -16,26 +16,29 @@ r_prime_0 = -1/np.sqrt(2)
 
 def main(radius, points, x, theta, v0, m_prime, m0, mf):
     geodesic = vaidya_geodesic
-    # test_angle = impact_parameter_and_lensing_angle(geodesic, 0.5, 0.25, m0, mf)
-    set_of_impact_parameters = np.linspace(0.01, 10, 100)
-    set_of_rates = [0.01, 0.04, 0.07, 0.1, 0.13, 0.16, 0.19, 0.193, 0.194, 0.22, 0.25]
-    fig1 = plt.figure(figsize=(15, 8))
-    ax1 = fig1.add_subplot(111)
-    for rate in set_of_rates:
-      angles = []
-      set_of_b = []
-      for b in set_of_impact_parameters:
-        angle = impact_parameter_and_lensing_angle(geodesic, b, rate, m0, mf)
-        if angle != 0:
-          angles.append(angle)
-          set_of_b.append(b)
-      ax1.plot(set_of_b, angles, label = f"rate = {rate}")
-    ax1.grid(True)
-    ax1.set_xlabel('Impact parameter')
-    ax1.set_ylabel('Lensing angle in degrees')
-    ax1.set_title('Gravitational lensing of a single particle')
-    ax1.legend()
-    fig1.savefig("particle_lensing.png", dpi=300, bbox_inches='tight')
+    test = True
+    if test:
+      test_angle = impact_parameter_and_lensing_angle(geodesic, 0.05, 0.11, m0, mf, test)
+    else:
+      set_of_impact_parameters = np.linspace(0.00001, 10, 100)
+      set_of_rates = [0.01, 0.03, 0.05, 0.0625, 0.0626, 0.07, 0.09, 0.11, 0.13, 0.15, 0.17]
+      fig1 = plt.figure(figsize=(15, 8))
+      ax1 = fig1.add_subplot(111)
+      for rate in set_of_rates:
+        angles = []
+        set_of_b = []
+        for b in set_of_impact_parameters:
+          angle = impact_parameter_and_lensing_angle(geodesic, b, rate, m0, mf, test)
+          if angle != 0:
+            angles.append(angle)
+            set_of_b.append(b)
+        ax1.plot(set_of_b, angles, label = f"rate = {rate}")
+      ax1.grid(True)
+      ax1.set_xlabel('Impact parameter')
+      ax1.set_ylabel('Lensing angle in degrees')
+      ax1.set_title('Gravitational lensing of a single particle')
+      ax1.legend()
+      fig1.savefig("particle_lensing.png", dpi=300, bbox_inches='tight')
     # # get critical theta
     # theta_c = find_critical_theta(geodesic, radius, x, v0, m_prime, m0, mf)
     # # print(f"Critical theta: {theta_c}")
@@ -83,7 +86,6 @@ def main(radius, points, x, theta, v0, m_prime, m0, mf):
 
     for initial_condition in set_of_initial_conditions:
       set_of_trajectories.append(plot_until_xstop(geodesic, initial_condition, -x, m_prime, m0, mf))
-
 
     #6. Visualize the solution
     fig1 = plt.figure(figsize = (20, 20))
@@ -178,7 +180,7 @@ def main(radius, points, x, theta, v0, m_prime, m0, mf):
     # Save fig3
     fig3.savefig("trajectories_3d_side_view.png", dpi=300, bbox_inches='tight')
     
-    for theta in np.linspace(0.314, 0.523, 10):
+    for theta in np.linspace(0.314, 0.523, 8):
       plot_image(radius, points, x, theta, v0, 0.0625, m0, mf, geodesic, 'vaidya_with_naked_singularity', "#3d84bf")
       plot_image(radius, points, x, theta, v0, 0.25, m0, mf, geodesic, 'vaidya_without_naked_singularity', "#255075")
       plot_image(radius, points, x, theta, v0, 0, 1, 1, geodesic, 'schwarzschild', "#0d1d2b")
